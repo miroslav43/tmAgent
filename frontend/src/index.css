@@ -1,0 +1,300 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 255 255 255;
+    --foreground: 15 23 42;
+
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+
+    --primary: 30 58 138;
+    --primary-foreground: 255 255 255;
+
+    --secondary: 248 250 252;
+    --secondary-foreground: 30 41 59;
+
+    --muted: 248 250 252;
+    --muted-foreground: 100 116 139;
+
+    --accent: 248 250 252;
+    --accent-foreground: 30 41 59;
+
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 30 58 138;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 255 255 255;
+    --sidebar-foreground: 51 65 85;
+    --sidebar-primary: 30 58 138;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 248 250 252;
+    --sidebar-accent-foreground: 30 58 138;
+    --sidebar-border: 226 232 240;
+    --sidebar-ring: 30 58 138;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .hover-lift {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-lg;
+  }
+  
+  .gradient-bg {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-sm bg-white/80 border border-white/20;
+  }
+
+  /* Înlocuirea completă a culorilor pink cu gray/slate pentru contrast mai bun pe fundal alb */
+  .text-pink-50 {
+    @apply text-slate-700;
+  }
+  
+  .text-pink-100 {
+    @apply text-slate-700;
+  }
+  
+  .text-pink-200 {
+    @apply text-slate-600;
+  }
+  
+  .text-pink-300 {
+    @apply text-slate-600;
+  }
+  
+  .text-pink-400 {
+    @apply text-slate-700;
+  }
+  
+  .text-pink-500 {
+    @apply text-slate-800;
+  }
+  
+  .text-pink-600 {
+    @apply text-slate-800;
+  }
+  
+  .text-pink-700 {
+    @apply text-slate-900;
+  }
+  
+  .text-pink-800 {
+    @apply text-slate-900;
+  }
+  
+  .text-pink-900 {
+    @apply text-slate-900;
+  }
+  
+  .bg-pink-50 {
+    @apply bg-purple-50;
+  }
+  
+  .bg-pink-100 {
+    @apply bg-purple-100;
+  }
+  
+  .bg-pink-200 {
+    @apply bg-purple-200;
+  }
+  
+  .bg-pink-300 {
+    @apply bg-purple-300;
+  }
+  
+  .bg-pink-400 {
+    @apply bg-purple-400;
+  }
+  
+  .bg-pink-500 {
+    @apply bg-purple-500;
+  }
+  
+  .bg-pink-600 {
+    @apply bg-purple-600;
+  }
+  
+  .border-pink-200 {
+    @apply border-purple-200;
+  }
+  
+  .border-pink-300 {
+    @apply border-purple-300;
+  }
+  
+  .border-pink-400 {
+    @apply border-purple-400;
+  }
+  
+  .border-pink-500 {
+    @apply border-purple-500;
+  }
+  
+  .border-pink-600 {
+    @apply border-purple-600;
+  }
+  
+  /* Hover states pentru pink -> purple/slate */
+  .hover\:text-pink-500:hover {
+    @apply text-slate-800;
+  }
+  
+  .hover\:text-pink-600:hover {
+    @apply text-slate-900;
+  }
+  
+  .hover\:bg-pink-50:hover {
+    @apply bg-purple-50;
+  }
+  
+  .hover\:bg-pink-100:hover {
+    @apply bg-purple-100;
+  }
+  
+  .hover\:border-pink-300:hover {
+    @apply border-purple-300;
+  }
+
+  /* Stil specific pentru navbar ca să evităm textul invizibil pe fundal alb */
+  .navbar-link-inactive {
+    @apply text-slate-600 hover:text-primary-700;
+  }
+  
+  .navbar-link-active {
+    @apply text-primary-700 bg-primary-50;
+  }
+}
+
+/* Ensure proper overlay hierarchy */
+body {
+  background-color: white !important;
+}
+
+/* Force CSS variables to correct colors */
+:root {
+  --background: 255 255 255 !important; /* Pure white */
+  --input: 229 231 235 !important; /* Gray-200 for borders */
+  --muted-foreground: 107 114 128 !important; /* Gray-500 for placeholders */
+  --ring: 59 130 246 !important; /* Blue-500 for focus rings */
+}
+
+/* Fix Input components */
+input[type="text"],
+input[type="email"], 
+input[type="password"],
+input[type="number"],
+input[type="date"],
+input[type="file"],
+textarea {
+  background-color: white !important;
+  border-color: #e5e7eb !important; /* gray-200 */
+  color: #1f2937 !important; /* gray-800 */
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder,
+input[type="password"]::placeholder,
+input[type="number"]::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+/* Focus states */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+textarea:focus {
+  background-color: white !important;
+  border-color: #3b82f6 !important; /* blue-500 */
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Specific class overrides */
+.bg-background {
+  background-color: white !important;
+}
+
+.border-input {
+  border-color: #e5e7eb !important; /* gray-200 */
+}
+
+.text-muted-foreground {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+.placeholder\:text-muted-foreground::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+/* Fix any gray colors that might appear yellow */
+.bg-gray-100 {
+  background-color: #f1f5f9 !important; /* Force slate-100 */
+}
+
+.bg-gray-50 {
+  background-color: #f8fafc !important; /* Force slate-50 */
+}
+
+.text-gray-600 {
+  color: #475569 !important; /* Force slate-600 */
+}
+
+.text-gray-500 {
+  color: #64748b !important; /* Force slate-500 */
+}
+
+.text-gray-800 {
+  color: #1e293b !important; /* Force slate-800 */
+}
+
+.text-gray-300 {
+  color: #cbd5e1 !important; /* Force slate-300 */
+}
+
+/* Ensure card backgrounds are pure white */
+.bg-card {
+  background-color: white !important;
+}
+
+.toast-viewport {
+  z-index: 50 !important;
+}
+
+/* Ensure proper stacking context for overlays */
+.overlay {
+  z-index: 40;
+}
+
+.modal {
+  z-index: 45;
+}
+
+.toast {
+  z-index: 50;
+}

@@ -1,0 +1,96 @@
+================================================================================
+TRUSTED SITES SEARCH - GEMINI + PERPLEXITY INTEGRATION
+================================================================================
+
+Original Query: Care este procedura oficială și ce documente sunt necesare pentru reînnoirea cărții de identitate în Timișoara, România, inclusiv informații despre termenul de valabilitate, taxele aferente și instituția responsabilă (Direcția de Evidență a Populației)?
+Processing Date: 2025-06-01 07:41:07
+--------------------------------------------------------------------------------
+
+STEP 1: DOMAIN SELECTION WITH GEMINI 2.5 FLASH
+--------------------------------------------------
+Selected Domains (5 total):
+   1. depabd.mai.gov.ro
+   2. tm.prefectura.mai.gov.ro
+   3. servicii.primariatm.ro
+   4. hub.mai.gov.ro
+   5. legislatie.just.ro
+
+Gemini Token Usage:
+   Total Tokens: 14939
+   Input Tokens: 13090
+   Output Tokens: 50
+
+--------------------------------------------------------------------------------
+
+STEP 2: WEB SEARCH WITH PERPLEXITY (DOMAIN FILTERED)
+--------------------------------------------------
+Search Configuration:
+   - Domain Filter: 5 Romanian trusted sites
+   - Geographic Filter: Romania
+   - Date Filter: 2005-2025
+   - Model: sonar-reasoning-pro
+
+SEARCH RESULTS:
+--------------------
+<think>
+Okay, let's tackle this query about renewing an ID card in Timișoara, Romania. The user wants the official procedure, required documents, validity period, fees, and the responsible institution. 
+
+First, I need to check the search results provided. The main sources are from the Romanian government and the Timișoara city website. 
+
+Starting with the responsible institution, the search results mention "Direcția pentru Evidența Persoanelor și Administrarea Bazelor de Date" (DEPABD) and local community services. The Timișoara city site (source 6) is crucial here as it's specific to the location.
+
+Next, the validity period. Sources 2, 3, and 4 discuss different validity periods based on age. For adults over 25, it's 10 years, and after 55, it's permanent. But there's a note in source 6 about a new validity period starting in 2025, so I need to check that. Wait, the current date given is June 2025, so the new 10-year validity for adults over 18 from source 2 would apply. However, source 3 mentions 10 years after 25, which might be outdated if new laws are in place. Need to cross-reference. Source 2 (LEGE 162/2020) states that after 18, it's 10 years. So the validity depends on age, with 10 years for adults over 18, and permanent after 60 (source 2) or 55 (source 4). There's a discrepancy here. Maybe the law changed, so I should prioritize the more recent source. Source 2 is from 2020, so it's likely the updated one. So validity is 10 years after 18, permanent after 60.
+
+Documents required: Source 5 and 6 list the necessary documents. For renewal, the old ID, proof of address, marriage certificate if applicable, and payment receipt. Source 6 from Timișoara adds that if you're not the property owner, you need the owner's agreement. Also, in case of loss, a police report is needed.
+
+Procedure steps: From source 1 and 6, the process involves making an appointment (online via Timișoara's site), submitting documents in person, paying the fee, and then receiving the ID. The Timișoara site emphasizes online payment and arriving no more than 10 minutes before the appointment.
+
+Fees: Source 5 mentions 7 lei for the ID and 5 lei for the stamp. Source 6 says 7 lei for the ID, payable online. So total is 12 lei, but need to confirm if the stamp is still required. The Timișoara site doesn't mention the stamp, so maybe it's included now or the procedure changed. It's safer to mention both fees as per the sources.
+
+Institution details: DEPABD is the main authority, but in Timișoara, it's handled by the local community service, likely the Primăria. The address isn't provided in the sources, but the link to the Timișoara site (source 6) has the info, so I should direct users there.
+
+Putting it all together, the answer should outline the steps, documents, fees, validity, and institution, citing the relevant sources. Make sure to highlight the Timișoara-specific details from source 6, like online appointment and payment.
+</think>
+
+Procedura de reînnoire a cărții de identitate în Timișoara implică următorii pași și documente, conform surselor oficiale:
+
+### **1. Instituția responsabilă**
+Actul se eliberează prin **Direcția de Evidență a Populației** (Serviciul Public Comunitar de Evidență a Persoanelor) de la Primăria Timișoara[1][6].
+
+### **2. Termen de valabilitate**
+- **10 ani** pentru persoanele peste 18 ani[2][4]
+- **Valabilitate permanentă** după vârsta de 60 de ani[2]
+
+### **3. Documente necesare**
+- **Actul de identitate expirat** (original și copie)[5][6]
+- **Certificatul de naștere** (original și copie)[5]
+- **Dovada adresei de domiciliu**: contract de vânzare-cumpărare, extras CF la zi sau alt document notarial (original și copie)[6]
+- **Acordul proprietarului/găzduitorului** (dacă nu sunteți proprietarul locuinței)[6]
+- **Chitanța de plată** (7 lei pentru carte + 5 lei taxă de timbru)[5][6]
+- **Certificat de căsătorie/divorț/deces** (după caz, original și copie)[5]
+
+În caz de **pierdere/furt**:
+- Raport de la Poliție (original și copie)[6]
+- Document alternativ cu fotografie (pașaport, permis conducere)[6]
+
+### **4. Procedura pas cu pas**
+1. **Programare online** pe [portalul Primăriei Timișoara](https://servicii.primariatm.ro/act-identitate)[6]
+2. **Plata taxelor** online (7 lei) sau la casierie[6]
+3. **Prezentarea la sediu** cu documentele (cu maxim 10 minute înainte de programare)[6]
+4. **Preluarea fotografiei** și semnătură biometrică[1]
+5. **Emiterea actului** în 30 de zile lucrătoare[6]
+
+### **5. Particularități Timișoara**
+- Plata online este obligatorie pentru evitarea aglomerațiilor[6]
+- Copiile documentelor trebuie să fie clar vizibile[6]
+- Pentru minorii sub 14 ani este necesară prezența părintelui/tutorelui[5]
+
+Pentru informații actualizate și programări, consultați portalul dedicat: [Act de identitate - Primăria Timișoara](https://servicii.primariatm.ro/act-identitate)[6].
+
+================================================================================
+WORKFLOW SUMMARY:
+1. User query analyzed by Gemini 2.5 Flash thinking model
+2. Most relevant Romanian government sites selected
+3. Perplexity search restricted to selected domains only
+4. Results formatted as step-by-step instructions
+================================================================================
