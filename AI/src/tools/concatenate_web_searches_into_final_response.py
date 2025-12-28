@@ -1,16 +1,18 @@
 import os
-from google import genai
-from google.genai import types
 from dotenv import load_dotenv
 from datetime import datetime
 import re
 import json
+try:
+    from .openai_helper import get_openai_client
+except ImportError:
+    from tools.openai_helper import get_openai_client
 
 # Load environment variables
 load_dotenv()
 
 # Get API key from environment
-GEMINI_API_KEY = os.getenv("GEMINI_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 CURRENT_DATE = datetime.now().strftime("%Y-%m-%d")
 
 def load_concatenation_system_prompt(response_style: str = "detailed"):
@@ -238,11 +240,11 @@ def concatenate_web_searches_into_final_response(
     print("=" * 60)
     
     # Validate API key
-    if not GEMINI_API_KEY:
-        print("❌ Error: GEMINI_KEY not found in environment variables")
+    if not OPENAI_API_KEY:
+        print("❌ Error: OPENAI_API_KEY not found in environment variables")
         return None
     
-    print(f"✅ API Key loaded: {GEMINI_API_KEY[:10]}...{GEMINI_API_KEY[-10:]}")
+    print(f"✅ OpenAI API Key loaded: {OPENAI_API_KEY[:10]}...{OPENAI_API_KEY[-10:]}")
     
     # Load system prompt based on response style
     system_prompt = load_concatenation_system_prompt(response_style)
@@ -287,81 +289,51 @@ def concatenate_web_searches_into_final_response(
     print("-" * 40)
     
     try:
-        # Initialize the new Gen AI client
-        print(f"\n🔌 Initializing Gemini API client...")
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        print("✅ Gemini API client configured for final response generation")
+        # Initialize OpenAI client
+        print(f"\n🔌 Initializing OpenAI client...")
+        openai_helper = get_openai_client()
+        print("✅ OpenAI client configured for final response generation")
         
-        # Prepare content using the new SDK structure
-        print(f"\n📦 Preparing content structure...")
-        contents = [
-            types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(text=user_input),
-                ],
-            ),
-        ]
-        print(f"✅ Content structure prepared with {len(contents)} message(s)")
-        print(f"📊 First content role: {contents[0].role}")
-        print(f"📊 First content parts count: {len(contents[0].parts)}")
-        print(f"📊 First part text length: {len(contents[0].parts[0].text)} characters")
-        
-        # Generate final response with system instruction in config
-        print(f"\n⚙️ Preparing generation config...")
-        generate_content_config = types.GenerateContentConfig(
-            system_instruction=system_prompt,
-            temperature=temperature,
-            max_output_tokens=max_tokens,
-            response_mime_type="text/plain"
-        )
-        print(f"✅ Generation config prepared:")
-        print(f"   📊 Temperature: {generate_content_config.temperature}")
-        print(f"   📊 Max tokens: {generate_content_config.max_output_tokens}")
-        print(f"   📊 MIME type: {generate_content_config.response_mime_type}")
-        print(f"   📊 System instruction length: {len(generate_content_config.system_instruction)} characters")
-        
-        print(f"\n🚀 Making API call to {model}...")
-        print(f"📡 Sending request with:")
-        print(f"   🔹 Model: {model}")
-        print(f"   🔹 Contents: {len(contents)} messages")
-        print(f"   🔹 Total input size: ~{len(user_input) + len(system_prompt)} characters")
+        print(f"\n📦 Preparing content...")
+        print(f"   📊 User input length: {len(user_input)} characters")
+        print(f"   📊 System prompt length: {len(system_prompt)} characters")
         
         # Check if input might be too large
         total_input_size = len(user_input) + len(system_prompt)
         if total_input_size > 30000:
-            print(f"⚠️ Input size ({total_input_size} chars) is quite large, this might cause timeout issues")
+            print(f"⚠️ Input size ({total_input_size} chars) is quite large, truncating...")
+            user_input = user_input[:15000] + "\n\n[INPUT TRUNCATED DUE TO SIZE LIMITATIONS]"
+        
+        print(f"\n🚀 Making API call to {model}...")
+        print(f"📡 Sending request with:")
+        print(f"   🔹 Model: {model}")
+        print(f"   🔹 Total input size: ~{len(user_input) + len(system_prompt)} characters")
         
         try:
-            response = client.models.generate_content(
+            response_text = openai_helper.generate_text(
+                prompt=user_input,
+                system_instruction=system_prompt,
                 model=model,
-                contents=contents,
-                config=generate_content_config
+                temperature=temperature,
+                max_tokens=max_tokens
             )
             print(f"✅ API call completed successfully!")
         except Exception as api_error:
             print(f"❌ API call failed: {api_error}")
-            print(f"🔄 Trying with reduced input size...")
+            print(f"🔄 Trying with further reduced input size...")
             
             # Try with a smaller user input
             if len(user_input) > 8000:
                 print(f"📉 Reducing user input from {len(user_input)} to ~8000 characters...")
                 truncated_input = user_input[:8000] + "\n\n[INPUT TRUNCATED DUE TO SIZE LIMITATIONS]"
                 
-                contents_fallback = [
-                    types.Content(
-                        role="user",
-                        parts=[
-                            types.Part.from_text(text=truncated_input),
-                        ],
-                    ),
-                ]
-                
                 try:
-                    response = client.models.generate_content(
+                    response_text = openai_helper.generate_text(
+                        prompt=truncated_input,
+                        system_instruction=system_prompt,
                         model=model,
-                        contents=contents_fallback,
-                        config=generate_content_config
+                        temperature=temperature,
+                        max_tokens=max_tokens
                     )
                     print(f"✅ Fallback API call with reduced input completed successfully!")
                 except Exception as fallback_error:
@@ -372,44 +344,11 @@ def concatenate_web_searches_into_final_response(
         
         # Debug response structure
         print(f"\n🔍 RESPONSE DEBUGGING:")
-        print(f"   📊 Response type: {type(response)}")
-        print(f"   📊 Response object: {response}")
+        print(f"   📊 Response type: {type(response_text)}")
         
-        if hasattr(response, 'text'):
-            print(f"   📊 Has .text attribute: Yes")
-            print(f"   📊 .text value: {repr(response.text)}")
-            print(f"   📊 .text type: {type(response.text)}")
-            if response.text:
-                print(f"   📊 .text length: {len(response.text)}")
-            else:
-                print(f"   ⚠️ .text is None or empty")
-        else:
-            print(f"   ❌ No .text attribute found")
-        
-        if hasattr(response, 'candidates'):
-            print(f"   📊 Has .candidates attribute: Yes")
-            print(f"   📊 Candidates count: {len(response.candidates) if response.candidates else 0}")
-            if response.candidates:
-                for i, candidate in enumerate(response.candidates):
-                    print(f"   📊 Candidate {i}: {candidate}")
-                    if hasattr(candidate, 'content'):
-                        print(f"   📊 Candidate {i} content: {candidate.content}")
-                    if hasattr(candidate, 'finish_reason'):
-                        print(f"   📊 Candidate {i} finish_reason: {candidate.finish_reason}")
-            else:
-                print(f"   ⚠️ .candidates is None or empty")
-        else:
-            print(f"   ❌ No .candidates attribute found")
-        
-        if hasattr(response, '__dict__'):
-            print(f"   📊 Response attributes: {list(response.__dict__.keys())}")
-            for key, value in response.__dict__.items():
-                if key not in ['text', 'candidates']:
-                    print(f"   📊 {key}: {value}")
-        
-        # Extract response text
-        if response and response.text:
-            final_response = response.text
+        if response_text:
+            print(f"   📊 Response length: {len(response_text)}")
+            final_response = response_text
             print(f"✅ Final response generated successfully! ({len(final_response)} characters)")
             print(f"📝 Response preview (first 200 chars):")
             print("-" * 40)
@@ -437,39 +376,10 @@ def concatenate_web_searches_into_final_response(
             return final_response
         else:
             print("❌ No text found in response")
-            print("🔍 Attempting to extract text from alternative sources...")
-            
-            # Try alternative extraction methods
-            extracted_text = None
-            if hasattr(response, 'candidates') and response.candidates:
-                for i, candidate in enumerate(response.candidates):
-                    print(f"   🔍 Checking candidate {i}...")
-                    if hasattr(candidate, 'content') and candidate.content:
-                        if hasattr(candidate.content, 'parts') and candidate.content.parts:
-                            for j, part in enumerate(candidate.content.parts):
-                                print(f"   🔍 Checking candidate {i}, part {j}...")
-                                if hasattr(part, 'text') and part.text:
-                                    extracted_text = part.text
-                                    print(f"   ✅ Found text in candidate {i}, part {j}!")
-                                    break
-                            if extracted_text:
-                                break
-                        elif hasattr(candidate.content, 'text') and candidate.content.text:
-                            extracted_text = candidate.content.text
-                            print(f"   ✅ Found text in candidate {i} content!")
-                            break
-                    if extracted_text:
-                        break
-            
-            if extracted_text:
-                print(f"✅ Successfully extracted text via alternative method! ({len(extracted_text)} characters)")
-                return extracted_text
-            else:
-                print("❌ Could not extract text from any source")
-                return None
+            return None
         
     except Exception as e:
-        print(f"❌ Error making Gemini API call for final response: {e}")
+        print(f"❌ Error making OpenAI API call for final response: {e}")
         print(f"🔍 Exception type: {type(e)}")
         import traceback
         print(f"📄 Full traceback:")

@@ -1,14 +1,16 @@
 import os
-from google import genai
-from google.genai import types
 from dotenv import load_dotenv
 from datetime import datetime
+try:
+    from .openai_helper import get_openai_client
+except ImportError:
+    from tools.openai_helper import get_openai_client
 
 # Load environment variables
 load_dotenv()
 
 # Get API key from environment
-GEMINI_API_KEY = os.getenv("GEMINI_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 CURRENT_DATE = datetime.now().strftime("%Y-%m-%d")
 
 def load_system_prompt():
@@ -37,25 +39,25 @@ def test_gemini_reformulation(
     user_query: str, 
     temperature: float = 0.1, 
     max_tokens: int = 1000,
-    model: str = "gemini-2.5-flash-preview-04-17"
+    model: str = "gpt-4o-mini"
 ) -> str:
     """
-    Test Gemini API with the robust prompts system prompt
+    Reformulate user query using OpenAI (replaces Gemini)
     
     Args:
         user_query: The user's query to be reformulated
         temperature: Controls randomness (0.0-1.0, lower = more focused)
         max_tokens: Maximum tokens to generate
-        model: Gemini model to use (gemini-2.0-flash, gemini-2.5-flash-preview-05-20, etc.)
+        model: OpenAI model to use (gpt-4o-mini, gpt-4o)
     
     Returns:
-        The reformulated query from Gemini
+        The reformulated query from OpenAI
     """
     
     # Validate API key
-    if not GEMINI_API_KEY:
-        print("❌ Error: GEMINI_KEY not found in environment variables")
-        print("Please check your .env file and ensure GEMINI_KEY is set")
+    if not OPENAI_API_KEY:
+        print("❌ Error: OPENAI_API_KEY not found in environment variables")
+        print("Please check your .env file and ensure OPENAI_API_KEY is set")
         return None
     
     # Load system prompt
@@ -63,13 +65,12 @@ def test_gemini_reformulation(
     if not system_prompt:
         return None
     
-    # Configure Gemini API
+    # Configure OpenAI
     try:
-        # Initialize the new Gen AI client
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        print("✅ Gemini API client configured successfully")
+        openai_helper = get_openai_client()
+        print("✅ OpenAI client configured successfully")
     except Exception as e:
-        print(f"❌ Error configuring Gemini API: {e}")
+        print(f"❌ Error configuring OpenAI: {e}")
         return None
     
     print(f"\n🔧 Configuration:")
@@ -81,34 +82,17 @@ def test_gemini_reformulation(
     print(f"\n🤖 Processing with system prompt...")
     
     try:
-        # Prepare content using the new SDK structure
-        contents = [
-            types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(text=user_query),
-                ],
-            ),
-        ]
-        
-        # Generate response with system instruction in config
-        generate_content_config = types.GenerateContentConfig(
+        # Make OpenAI API call
+        result = openai_helper.generate_text(
+            prompt=user_query,
             system_instruction=system_prompt,
-            temperature=temperature,
-            max_output_tokens=max_tokens,
-            response_mime_type="text/plain"
-        )
-        
-        # Make API call with system instruction properly separated
-        response = client.models.generate_content(
             model=model,
-            contents=contents,
-            config=generate_content_config
+            temperature=temperature,
+            max_tokens=max_tokens
         )
         
-        # Extract response text
-        if response and response.text:
-            return response.text
+        if result:
+            return result
         else:
             print("⚠️ No text found in response")
             return "No text found in response"

@@ -1,17 +1,19 @@
 import os
-from google import genai
-from google.genai import types
 from dotenv import load_dotenv
 from datetime import datetime
 import json
 import requests
 import re
+try:
+    from .openai_helper import get_openai_client
+except ImportError:
+    from tools.openai_helper import get_openai_client
 
 # Load environment variables
 load_dotenv()
 
 # Get API keys from environment
-GEMINI_API_KEY = os.getenv("GEMINI_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 CURRENT_DATE = datetime.now().strftime("%Y-%m-%d")
 
@@ -98,25 +100,25 @@ def test_gemini_domain_selection(
     user_query: str, 
     temperature: float = 0.1, 
     max_tokens: int = 1000,
-    model: str = "gemini-2.5-flash-preview-04-17"
+    model: str = "gpt-4o-mini"
 ) -> dict:
     """
-    Test Gemini 2.5 Flash for domain selection using the newer SDK structure
+    Domain selection using OpenAI (replaces Gemini)
     
     Args:
         user_query: The user's query for which to select relevant domains
         temperature: Controls randomness (0.0-1.0, lower = more focused)
         max_tokens: Maximum tokens to generate
-        model: Gemini model to use
+        model: OpenAI model to use
     
     Returns:
         Dict containing the domain list and metadata
     """
     
     # Validate API key
-    if not GEMINI_API_KEY:
-        print("❌ Error: GEMINI_KEY not found in environment variables")
-        print("Please check your .env file and ensure GEMINI_KEY is set")
+    if not OPENAI_API_KEY:
+        print("❌ Error: OPENAI_API_KEY not found in environment variables")
+        print("Please check your .env file and ensure OPENAI_API_KEY is set")
         return None
     
     # Load system prompt
@@ -124,7 +126,7 @@ def test_gemini_domain_selection(
     if not system_prompt:
         return None
     
-    print(f"\n🔧 Gemini Configuration:")
+    print(f"\n🔧 OpenAI Configuration:")
     print(f"   Model: {model}")
     print(f"   Temperature: {temperature}")
     print(f"   Max Tokens: {max_tokens}")
@@ -133,35 +135,19 @@ def test_gemini_domain_selection(
     print(f"\n🤖 Processing domain selection...")
     
     try:
-        # Initialize the new Gen AI client
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        print("✅ Gemini API client configured successfully")
-        
-        # Prepare content using the new SDK structure  
-        contents = [
-            types.Content(
-                role="user",
-                parts=[
-                    types.Part.from_text(text=user_query),
-                ],
-            ),
-        ]
+        openai_helper = get_openai_client()
+        print("✅ OpenAI client configured successfully")
         
         print(f"🔧 Making API call to {model}...")
         
-        # Generate response with system instruction in config
-        generate_content_config = types.GenerateContentConfig(
-            system_instruction=system_prompt + "\n\n**IMPORTANT: Răspundeți DOAR cu o listă JSON de domenii (format array), de exemplu: [\"dfmt.ro\",\"servicii.primariatm.ro\",\"primariatm.ro\"]. Nu includeți text explicativ sau analiză - doar lista JSON.**",
-            temperature=temperature,
-            max_output_tokens=max_tokens,
-            response_mime_type="text/plain"
-        )
+        # Make OpenAI API call for JSON response
+        enhanced_prompt = system_prompt + "\n\n**IMPORTANT: Răspundeți DOAR cu o listă JSON de domenii (format array), de exemplu: [\"dfmt.ro\",\"servicii.primariatm.ro\",\"primariatm.ro\"]. Nu includeți text explicativ sau analiză - doar lista JSON.**\n\nUser query: " + user_query
         
-        # Make API call with system instruction properly separated
-        response = client.models.generate_content(
+        response_text = openai_helper.generate_text(
+            prompt=enhanced_prompt,
             model=model,
-            contents=contents,
-            config=generate_content_config
+            temperature=temperature,
+            max_tokens=max_tokens
         )
         
         print(f"📨 Response received, processing...")
@@ -177,50 +163,10 @@ def test_gemini_domain_selection(
             }
         }
         
-        # Better error handling for blocked responses
-        if response and hasattr(response, 'candidates') and response.candidates:
-            candidate = response.candidates[0]
-            
-            # Check if the response was blocked
-            if hasattr(candidate, 'finish_reason'):
-                finish_reason = candidate.finish_reason
-                if finish_reason == 2:  # SAFETY
-                    print(f"⚠️ Response was blocked due to safety filters")
-                    print(f"📝 Attempting simplified query...")
-                    # Try with a simplified, more direct query
-                    simplified_query = f"Pentru query-ul despre '{user_query[:50]}', returnează o listă JSON cu domeniile oficiale românești relevante."
-                    response = client.models.generate_content(
-                        model=model,
-                        contents=[
-                            types.Content(
-                                role="user",
-                                parts=[
-                                    types.Part.from_text(text=simplified_query),
-                                ],
-                            ),
-                        ],
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_prompt + "\n\n**IMPORTANT: Răspundeți DOAR cu o listă JSON de domenii (format array), de exemplu: [\"dfmt.ro\",\"servicii.primariatm.ro\",\"primariatm.ro\"]. Nu includeți text explicativ sau analiză - doar lista JSON.**",
-                            temperature=temperature,
-                            max_output_tokens=max_tokens,
-                            response_mime_type="text/plain"
-                        )
-                    )
-        
         # Extract response text
-        if response and response.text:
-            result["raw_response"] = response.text
-            print(f"✅ Response extracted: {len(response.text)} characters")
-            
-            # Extract usage metadata if available
-            if hasattr(response, 'usage_metadata') and response.usage_metadata:
-                usage = response.usage_metadata
-                result["usage_metadata"] = {
-                    "total_tokens": getattr(usage, 'total_token_count', 0),
-                    "input_tokens": getattr(usage, 'prompt_token_count', 0),
-                    "output_tokens": getattr(usage, 'candidates_token_count', 0)
-                }
-                print(f"📊 Token usage: {result['usage_metadata']['total_tokens']} total tokens")
+        if response_text:
+            result["raw_response"] = response_text
+            print(f"✅ Response extracted: {len(response_text)} characters")
             
             # Validate and extract domains from response
             domains = validate_and_extract_domains(result["raw_response"])

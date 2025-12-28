@@ -1,0 +1,44 @@
+# Environment files
+.env
+**/.env
+*.env
+
+# Logs
+*.log
+backend.log
+frontend.log
+
+# Process IDs
+.pids
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Temporary files
+*.tmp
+*.temp
+p

@@ -54,8 +54,10 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     
     # AI Agent Configuration
+    openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     gemini_key: Optional[str] = Field(None, env="GEMINI_KEY")
     perplexity_api_key: Optional[str] = Field(None, env="PERPLEXITY_API_KEY")
+    use_openai: bool = Field(False, env="USE_OPENAI")  # Toggle between OpenAI and Gemini
     
     # AI Agent Settings
     ai_agent_enabled: bool = Field(True, env="AI_AGENT_ENABLED")

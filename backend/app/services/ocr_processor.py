@@ -14,6 +14,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from .personal_info_extractor import PersonalInfoExtractor
+from .openai_wrapper import OpenAIProcessor
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,19 +25,30 @@ logger = logging.getLogger(__name__)
 class LegalDocumentOCR:
     def __init__(self, api_key=None, db_session: AsyncSession = None):
         """
-        Initialize the Legal Document OCR processor using Gemini 2.0 Flash
+        Initialize the Legal Document OCR processor using Gemini 2.0 Flash or OpenAI GPT-4o
         
         Args:
             api_key (str): Google AI API key. If None, reads from GEMINI_API_KEY environment variable
             db_session: SQLAlchemy async session for database operations
         """
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        if not self.api_key:
-            raise ValueError("GEMINI_API_KEY environment variable must be set or api_key provided")
+        # Check if we should use OpenAI instead of Gemini
+        self.use_openai = os.getenv("USE_OPENAI", "false").lower() == "true"
         
-        # Initialize the new Gen AI client
-        self.client = genai.Client(api_key=self.api_key)
-        self.model_name = "gemini-2.0-flash-001"
+        if self.use_openai:
+            logger.info("Initializing OCR processor with OpenAI GPT-4o")
+            self.openai_processor = OpenAIProcessor()
+            self.client = None
+            self.model_name = "gpt-4o"
+        else:
+            logger.info("Initializing OCR processor with Gemini 2.0 Flash")
+            self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+            if not self.api_key:
+                raise ValueError("GEMINI_API_KEY environment variable must be set or api_key provided")
+            
+            # Initialize the new Gen AI client
+            self.client = genai.Client(api_key=self.api_key)
+            self.model_name = "gemini-2.0-flash-001"
+            self.openai_processor = None
         
         # Database session for async operations
         self.db_session = db_session
@@ -50,7 +62,10 @@ class LegalDocumentOCR:
         self.retry_delay = 2  # seconds
         
         # Initialize personal info extractor
-        self.personal_extractor = PersonalInfoExtractor(api_key=self.api_key)
+        if not self.use_openai:
+            self.personal_extractor = PersonalInfoExtractor(api_key=self.api_key)
+        else:
+            self.personal_extractor = None
     
     def _setup_database(self):
         """Set up SQLite database for storing transcribed documents"""
@@ -155,7 +170,35 @@ Furnizează doar textul transcris în formatul și structura exactă a documentu
 
     async def _call_gemini_with_retry(self, prompt: str, file_data: bytes = None, mime_type: str = None, 
                                      response_mime_type: str = None, temperature: float = 0.1) -> str:
-        """Call Gemini API with retry logic for better reliability"""
+        """Call AI API (Gemini or OpenAI) with retry logic for better reliability"""
+        
+        # Use OpenAI if configured
+        if self.use_openai and self.openai_processor:
+            logger.info("Using OpenAI for document processing")
+            try:
+                if file_data and mime_type:
+                    # Document with image
+                    result = await self.openai_processor.process_document_with_vision(
+                        prompt=prompt,
+                        file_data=file_data,
+                        mime_type=mime_type,
+                        temperature=temperature,
+                        max_tokens=8000 if response_mime_type != "application/json" else 1000
+                    )
+                else:
+                    # Text-only processing
+                    result = await self.openai_processor.process_text(
+                        prompt=prompt,
+                        temperature=temperature,
+                        max_tokens=1000 if response_mime_type == "application/json" else 8000,
+                        response_format="json" if response_mime_type == "application/json" else None
+                    )
+                return result
+            except Exception as e:
+                logger.error(f"OpenAI processing failed: {str(e)}")
+                raise Exception(f"OpenAI API failed: {str(e)}")
+        
+        # Use Gemini (original implementation)
         for attempt in range(self.max_retries):
             try:
                 logger.info(f"Calling Gemini API (attempt {attempt + 1}/{self.max_retries})")

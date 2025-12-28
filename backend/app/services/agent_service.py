@@ -323,7 +323,7 @@ class AgentService:
                     response_text = str(result)
                 
                 # Check for TimPark execution in the response text if not found above
-                if not timpark_executed and ("parcarea a fost plătită cu succes" in response_text.lower() or 
+                if response_text and not timpark_executed and ("parcarea a fost plătită cu succes" in response_text.lower() or 
                                            "payment completed" in response_text.lower() or
                                            "timpark" in response_text.lower()):
                     timpark_executed = True
@@ -333,6 +333,10 @@ class AgentService:
             else:
                 # Handle string response
                 response_text = str(result)
+            
+            # Ensure response_text is not None
+            if response_text is None:
+                response_text = ""
             
             # Clean up the response text if needed
             if not response_text.strip():
